@@ -1,0 +1,71 @@
+/* StepBar — horizontal stepper at the top of the app */
+
+.step-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: var(--space-6) var(--space-8);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.step-bar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  max-width: 180px;
+}
+
+.step-bar__item:last-child .step-bar__connector { display: none; }
+
+.step-bar__connector {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin: 0 var(--space-2);
+  transition: background var(--transition-normal);
+}
+
+.step-bar__connector--done { background: var(--color-accent); }
+
+.step-bar__circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all var(--transition-normal);
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+}
+
+.step-bar__item--active   .step-bar__circle {
+  border-color: var(--color-accent);
+  background: rgba(0,180,216,0.15);
+  color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(0,180,216,0.12);
+}
+
+.step-bar__item--done .step-bar__circle {
+  border-color: var(--color-success);
+  background: rgba(63,185,80,0.15);
+  color: var(--color-success);
+}
+
+.step-bar__label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-normal);
+  white-space: nowrap;
+}
+
+.step-bar__item--active .step-bar__label { color: var(--color-accent); }
+.step-bar__item--done   .step-bar__label { color: var(--color-success); }
