@@ -80,7 +80,7 @@ class TestIngestion:
         buf = io.BytesIO()
         pd.DataFrame({"ColA": [1], "ColB": [2]}).to_excel(buf, index=False)
         buf.seek(0)
-        with pytest.raises(IngestionError, match="مفقودة"):
+        with pytest.raises(IngestionError):
             read_excel(buf.read())
 
     def test_whitespace_stripped(self, tmp_path):

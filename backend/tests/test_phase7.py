@@ -36,9 +36,9 @@ from app.scheduler import solve, verify_solution
 def _small_graph() -> ConflictGraph:
     """Triangle A↔B↔C↔A with dept names attached."""
     cm = {
-        "A": CourseInfo(course_id="A", students={"s1","s2"}, dept_names={"قسم1": "الرياضيات"}),
-        "B": CourseInfo(course_id="B", students={"s2","s3"}, dept_names={"قسم1": "الفيزياء", "قسم2": "Physics"}),
-        "C": CourseInfo(course_id="C", students={"s1","s3"}, dept_names={"قسم2": "الكيمياء"}),
+        "A": CourseInfo(course_id="A", students={"s1","s2"}, variants={"قسم1": {("ث1", "الرياضيات")}}),
+        "B": CourseInfo(course_id="B", students={"s2","s3"}, variants={"قسم1": {("ث2", "الفيزياء")}, "قسم2": {("ث3", "Physics")}}),
+        "C": CourseInfo(course_id="C", students={"s1","s3"}, variants={"قسم2": {("ث1", "الكيمياء")}}),
     }
     edges = {frozenset({"A","B"}), frozenset({"B","C"}), frozenset({"A","C"})}
     return ConflictGraph(course_map=cm, edges=edges)
@@ -60,7 +60,7 @@ def _bench_graph(seed: int = 99) -> ConflictGraph:
         for c in rng.sample(course_ids, k):
             course_students[c].add(f"s{s}")
     course_map = {
-        c: CourseInfo(course_id=c, students=course_students[c], dept_names={"قسم": f"مادة {c}"})
+        c: CourseInfo(course_id=c, students=course_students[c], variants={"قسم": {("ث1", f"مادة {c}")}})
         for c in course_ids
     }
     edges = build_conflict_edges(course_map)
@@ -111,7 +111,7 @@ class TestSQLitePersistence:
         upsert_course_map(graph)
 
         # Manually mutate the graph's display name
-        graph.course_map["A"].dept_names["قسم1"] = "الجبر الخطي"
+        graph.course_map["A"].variants["قسم1"] = {("ث1", "الجبر الخطي")}
         upsert_course_map(graph)
 
         mappings = {(m["course_id"], m["department"]): m["display_name"]
@@ -213,12 +213,12 @@ class TestAcceptanceCriteria:
         course_b = CourseInfo(
             course_id="B",
             students={"s1"},
-            dept_names={"قسم1": "الفيزياء", "قسم2": "Physics"},
+            variants={"قسم1": {("ث1", "الفيزياء")}, "قسم2": {("ث1", "Physics")}},
         )
         dept = "قسم1"
         # Only "الفيزياء" should appear, not "Physics"
-        assert dept in course_b.dept_names
-        assert course_b.dept_names[dept] == "الفيزياء"
+        assert dept in course_b.variants
+        assert any(v[1] == "الفيزياء" for v in course_b.variants[dept])
         assert "قسم2" not in {dept}   # we never expose the other dept's name
 
 

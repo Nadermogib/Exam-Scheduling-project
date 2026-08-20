@@ -1,4 +1,5 @@
 import './StepBar.css';
+import { Check } from 'lucide-react';
 
 const STEPS = [
   { id: 0, label: 'رفع الملف' },
@@ -18,7 +19,7 @@ export default function StepBar({ current }) {
         return (
           <div key={step.id} className={`step-bar__item step-bar__item--${cls}`}>
             <div className="step-bar__circle">
-              {done ? '✓' : step.id + 1}
+              {done ? <Check size={18} strokeWidth={3} /> : step.id + 1}
             </div>
             <span className="step-bar__label">{step.label}</span>
             {i < STEPS.length - 1 && (

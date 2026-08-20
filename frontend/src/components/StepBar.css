@@ -69,3 +69,36 @@
 
 .step-bar__item--active .step-bar__label { color: var(--color-accent); }
 .step-bar__item--done   .step-bar__label { color: var(--color-success); }
+
+/* ── Responsiveness (P11-T1) ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .step-bar {
+    padding: var(--space-3) var(--space-4);
+  }
+  
+  .step-bar__item {
+    flex-direction: column;
+    gap: var(--space-1);
+    text-align: center;
+  }
+  
+  .step-bar__connector {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    z-index: -1;
+  }
+  
+  .step-bar__circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  
+  .step-bar__label {
+    font-size: 0.65rem;
+    white-space: normal;
+  }
+}

@@ -144,10 +144,25 @@ async def schedule(body: ScheduleRequest):
             day_courses = []
             for cid in sorted(course_ids):
                 info = graph.course_map.get(cid)
+                # Find a representative academic level for the UI card summary
+                # Since variants is dept -> set((level, name)), we flatten the levels
+                level = ""
+                if info:
+                    all_levels = []
+                    for vs in info.variants.values():
+                        all_levels.extend(v[0] for v in vs if v[0])
+                    if all_levels:
+                        from collections import Counter
+                        level = Counter(all_levels).most_common(1)[0][0]
+
+                # Convert sets to lists of dicts for JSON serialization
+                variants_list = {dept: [{"academic_level": v[0], "display_name": v[1]} for v in vs] for dept, vs in info.variants.items()} if info else {}
+
                 day_courses.append({
                     "course_id": cid,
-                    "display_names": info.dept_names if info else {},
+                    "variants": variants_list,
                     "student_count": len(info.students) if info else 0,
+                    "academic_level": level,
                 })
             schedule_dict[iso_date] = day_courses
 
@@ -194,7 +209,7 @@ async def schedule(body: ScheduleRequest):
     degree_map = stats["degree_map"]
     bottleneck = sorted(
         [{"course_id": cid, "degree": deg,
-          "display_names": graph.course_map[cid].dept_names}
+          "variants": {dept: [{"academic_level": v[0], "display_name": v[1]} for v in vs] for dept, vs in graph.course_map[cid].variants.items()}}
          for cid, deg in degree_map.items()],
         key=lambda x: -x["degree"],
     )[:10]

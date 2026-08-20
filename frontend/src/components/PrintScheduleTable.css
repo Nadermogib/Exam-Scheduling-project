@@ -1,0 +1,400 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   PrintScheduleTable.css — Phase 8-C
+   Print-ready university exam schedule grid table.
+   RTL layout. Optimised for both screen preview and PNG export.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Wrapper ─────────────────────────────────────────────────────────────────── */
+.print-table-wrapper {
+  direction: rtl;
+  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  background: #fff;
+  border-radius: 12px;
+  /* NOTE: overflow:hidden removed — it clips text in html2canvas PNG export.
+     Border-radius visual containment is handled via the export-area child. */
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Controls bar (above the table — not exported) ───────────────────────────── */
+.print-table-controls {
+  background: var(--color-surface, #ffffff);
+  border-bottom: 1px solid var(--color-border, rgba(0,0,0,0.1));
+  padding: 24px;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .print-table-controls {
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+/* Form Inputs Section */
+.print-controls-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 320px;
+}
+
+.print-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .print-controls-inputs {
+    min-width: 100%;
+  }
+}
+
+.print-input-group label {
+  font-size: 0.9rem;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 600;
+}
+
+.print-input-group input {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  direction: rtl;
+}
+
+.print-input-group input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  background: var(--color-surface);
+}
+
+.print-input-group input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Logo Section */
+.print-controls-logo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.print-controls-logo label {
+  font-size: 0.9rem;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .print-controls-logo {
+    min-width: 100%;
+  }
+}
+
+.print-logo-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--color-surface);
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--color-border);
+}
+
+.print-table-logo-preview {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  padding: 4px;
+}
+
+.print-logo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.btn-logo-upload {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.btn-logo-upload:hover {
+  background: var(--color-border);
+}
+
+.btn-logo-remove {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.btn-logo-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── The exportable area (everything below controls) ─────────────────────────── */
+.print-table-export-area {
+  background: #fff;
+  padding: 0;
+  min-width: 900px;
+}
+
+/* ── Table header (logo + title) ─────────────────────────────────────────────── */
+.print-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px;
+  background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);
+  color: #fff;
+  gap: 16px;
+  direction: rtl;
+}
+
+.print-table-header__logo-box {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.print-table-header__logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.print-table-header__title-block {
+  flex: 1;
+  text-align: center;
+}
+
+.print-table-header__university {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  opacity: 0.95;
+}
+
+.print-table-header__main-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+/* placeholder spacer so title stays centered when no right-side element */
+.print-table-header__spacer {
+  flex-shrink: 0;
+  width: 80px;
+}
+
+/* ── Stats ribbon under header ───────────────────────────────────────────────── */
+.print-table-meta {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 24px;
+  background: #eaf3fb;
+  border-bottom: 2px solid #2e86c1;
+  font-size: 0.82rem;
+  color: #1a5276;
+  direction: rtl;
+}
+
+.print-table-meta span {
+  font-weight: 600;
+}
+
+/* ── Grid table ──────────────────────────────────────────────────────────────── */
+.print-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+  font-size: 0.82rem;
+  color: #1a1a2e;
+  table-layout: fixed;
+  min-width: 900px;
+}
+
+/* Department header row */
+.print-grid-table thead tr {
+  background: #1a5276;
+  color: #fff;
+}
+
+.print-grid-table thead th {
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid #154360;
+  font-weight: 700;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+/* Day column — slightly wider and sticky for mobile scroll */
+.print-grid-table th.col-day,
+.print-grid-table td.col-day {
+  width: 110px;
+  min-width: 90px;
+  background: #d6eaf8;
+  color: #1a5276;
+  font-weight: 700;
+  text-align: center;
+  vertical-align: middle;
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+}
+
+.print-grid-table th.col-day {
+  z-index: 11;
+}
+
+.print-grid-table td.col-day {
+  color: #1a5276;
+  border: 1px solid #aed6f1;
+  padding: 10px 6px;
+}
+
+.print-day-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: block;
+  color: #1a5276;
+}
+
+.print-day-date {
+  font-size: 0.75rem;
+  color: #2e86c1;
+  direction: ltr;
+  unicode-bidi: plaintext;
+}
+
+/* Department cells */
+.print-grid-table td.col-dept {
+  border: 1px solid #aed6f1;
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: right;
+}
+
+/* Alternating row shading */
+.print-grid-table tbody tr:nth-child(even) td.col-dept {
+  background: #f4faff;
+}
+.print-grid-table tbody tr:nth-child(odd) td.col-dept {
+  background: #ffffff;
+}
+
+/* Empty cell dash */
+.print-cell-empty {
+  color: #bdc3c7;
+  text-align: center;
+  font-size: 1rem;
+  display: block;
+}
+
+/* Course entries within a cell */
+.print-course-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0;
+  border-bottom: 1px dotted #d5e8f5;
+  line-height: 1.4;
+}
+.print-course-entry:last-child {
+  border-bottom: none;
+}
+
+.print-course-name {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #1a1a2e;
+}
+
+.print-course-level {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2e86c1;
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+/* ── Export button ───────────────────────────────────────────────────────────── */
+.print-table-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-surface, #ffffff);
+  border-top: 1px solid var(--color-border, rgba(0,0,0,0.1));
+}
+
+/* ── @media print — if user prints directly via browser ──────────────────────── */
+@media print {
+  .print-table-controls,
+  .print-table-actions {
+    display: none !important;
+  }
+  .print-table-wrapper {
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .print-grid-table {
+    font-size: 9pt;
+  }
+  .print-grid-table th,
+  .print-grid-table td {
+    page-break-inside: avoid;
+  }
+}

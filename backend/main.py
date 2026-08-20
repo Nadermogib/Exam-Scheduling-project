@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.database import init_db
-from app.routers import health, db_status, upload, graph, schedule, export, reference
+from app.routers import health, db_status, upload, graph, schedule, export, reference, print_settings
 
 
 # ---------------------------------------------------------------------------
@@ -139,3 +139,4 @@ app.include_router(graph.router)
 app.include_router(schedule.router)
 app.include_router(export.router)
 app.include_router(reference.router)
+app.include_router(print_settings.router)

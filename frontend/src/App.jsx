@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CalendarDays } from 'lucide-react';
 import StepBar           from './components/StepBar';
 import UploadPage        from './pages/UploadPage';
 import ValidationPage    from './pages/ValidationPage';
@@ -125,7 +126,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-header__inner">
           <div className="app-logo">
-            <span className="app-logo__icon">🗓️</span>
+            <span className="app-logo__icon" style={{ display: 'flex' }}><CalendarDays size={24} color="var(--color-accent)" /></span>
             <div>
               <span className="app-logo__name">نظام جدولة الامتحانات</span>
               <span className="app-logo__sub">الدور التكميلي</span>

@@ -30,8 +30,10 @@ class CourseInfo:
     """Everything the graph needs to know about one unified course."""
     course_id: str
     students: set[str] = field(default_factory=set)
-    # dept → display_name (one entry per department this course appears in)
-    dept_names: dict[str, str] = field(default_factory=dict)
+    # dept → set of (academic_level, display_name) variants for this course
+    variants: dict[str, set[tuple[str, str]]] = field(default_factory=dict)
+    # dept → set of student_names
+    dept_students: dict[str, set[str]] = field(default_factory=dict)
 
 
 @dataclass
@@ -73,7 +75,7 @@ def course_unification(df: pd.DataFrame) -> dict[str, CourseInfo]:
 
     Returns: course_id → CourseInfo
       where CourseInfo.students = set of all student_names registered in that course
-            CourseInfo.dept_names = { department: display_name, … }
+            CourseInfo.variants = { department: set((level, name)), … }
 
     Rows with a blank course_id are skipped (they are a validation error and
     must not reach the graph-building step).
@@ -86,15 +88,23 @@ def course_unification(df: pd.DataFrame) -> dict[str, CourseInfo]:
         student = row["student_name"]
         dept = row["department"]
         name = row["course_display_name"]
+        level = row.get("academic_level", "")
 
         if cid not in course_map:
             course_map[cid] = CourseInfo(course_id=cid)
 
         info = course_map[cid]
         info.students.add(student)
-        # Last seen display name wins per department (Rule 3 violations are
-        # already blocked by validation before this point is reached)
-        info.dept_names[dept] = name
+        
+        # Add the plan variant for this department
+        if dept not in info.variants:
+            info.variants[dept] = set()
+        info.variants[dept].add((str(level).strip(), name))
+        
+        # Add student to department-specific set
+        if dept not in info.dept_students:
+            info.dept_students[dept] = set()
+        info.dept_students[dept].add(student)
 
     return course_map
 

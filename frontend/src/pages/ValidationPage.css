@@ -98,12 +98,28 @@
 /* Issues table */
 .issues-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .issues-table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
+  min-width: 700px;
+}
+
+.issues-table th:first-child,
+.issues-table td:first-child {
+  position: sticky;
+  right: 0;
+  background: var(--color-surface);
+  z-index: 10;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.03);
+}
+
+.issues-table th:first-child {
+  background: var(--color-surface-2);
+  z-index: 11;
 }
 
 .issues-table th {
@@ -126,7 +142,10 @@
 
 .issues-table tr:last-child td { border-bottom: none; }
 
-.issues-table tr:hover td { background: rgba(255,255,255,0.02); }
+.issues-table tr {
+  border-bottom: 1px solid var(--color-border);
+}
+.issues-table tr:hover td { background: rgba(0,0,0,0.02); }
 
 .row-number {
   font-size: var(--font-size-xs);

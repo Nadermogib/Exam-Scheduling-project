@@ -21,11 +21,12 @@ def upsert_course_map(graph: ConflictGraph) -> int:
     Returns the number of rows upserted.
     """
     now = datetime.now(timezone.utc).isoformat()
-    rows: list[tuple[str, str, str, str]] = []
+    rows: list[tuple[str, str, str, str, str]] = []
 
     for cid, info in graph.course_map.items():
-        for dept, name in info.dept_names.items():
-            rows.append((cid, dept, name, now))
+        for dept, variants in info.variants.items():
+            for level, name in variants:
+                rows.append((cid, dept, level, name, now))
 
     if not rows:
         return 0
@@ -33,9 +34,9 @@ def upsert_course_map(graph: ConflictGraph) -> int:
     with get_connection() as conn:
         conn.executemany(
             """
-            INSERT INTO course_name_map (course_id, department, display_name, last_updated)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(course_id, department)
+            INSERT INTO course_name_map (course_id, department, academic_level, display_name, last_updated)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(course_id, department, academic_level)
             DO UPDATE SET display_name = excluded.display_name,
                           last_updated = excluded.last_updated;
             """,
@@ -49,14 +50,14 @@ def upsert_course_map(graph: ConflictGraph) -> int:
 def fetch_all_mappings() -> list[dict]:
     """
     Fetch the complete course-code reference table from SQLite.
-    Returns a list of dicts: {course_id, department, display_name, last_updated}.
+    Returns a list of dicts: {course_id, department, academic_level, display_name, last_updated}.
     """
     with get_connection() as conn:
         cur = conn.execute(
             """
-            SELECT course_id, department, display_name, last_updated
+            SELECT course_id, department, academic_level, display_name, last_updated
             FROM course_name_map
-            ORDER BY course_id, department;
+            ORDER BY course_id, department, academic_level;
             """
         )
         return [dict(row) for row in cur.fetchall()]

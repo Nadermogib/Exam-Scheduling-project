@@ -11,40 +11,170 @@ Both files are RTL-formatted, one-sheet workbooks (except infeasibility which ha
 from __future__ import annotations
 
 import io
+import datetime
 from urllib.parse import quote
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import StreamingResponse
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
 from app.session_store import get_session
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
-# ─── Colour palette ───────────────────────────────────────────────────────────
-HEADER_FILL = PatternFill("solid", fgColor="1c2330")
-HEADER_FONT = Font(bold=True, color="00b4d8", name="Cairo", size=11)
-ACCENT_FILL = PatternFill("solid", fgColor="161b22")
-DATE_FONT   = Font(bold=True, color="3fb950", name="Cairo", size=10)
-BODY_FONT   = Font(color="e6edf3", name="Cairo", size=10)
+ALL_DEPTS = ["اتصالات", "برمجيات", "تقنية معلومات", "ذكاء اصطناعي", "شبكات الحاسوب", "صناعية", "طاقة متجددة", "ميكاترونيات"]
+
+# ─── Matrix Grid Styles ──────────────────────────────────────────────────────────
+THIN_BORDER = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
+DAY_FILL = PatternFill("solid", fgColor="FFFF00")  # Yellow
+HEADER_FILL = PatternFill("solid", fgColor="F2F2F2")
+TOTALS_FONT = Font(bold=True, color="FF0000", name="Arial", size=11)
+BOLD_FONT = Font(bold=True, name="Arial", size=11)
+NORMAL_FONT = Font(name="Arial", size=11)
+CENTER_ALIGN = Alignment(horizontal="center", vertical="center", wrap_text=True)
+DAY_ALIGN = Alignment(horizontal="center", vertical="center", textRotation=90, wrap_text=True)
 
 
-def _style_ws(ws, headers: list[str], col_widths: list[int]) -> None:
-    """Apply RTL, header styling, and column widths to a worksheet."""
+def _build_matrix_sheet(ws, schedule_dict: dict, graph, target_depts: list[str]):
     ws.sheet_view.rightToLeft = True
-    for col_i, (header, width) in enumerate(zip(headers, col_widths), start=1):
-        cell = ws.cell(row=1, column=col_i)
-        cell.value = header
-        cell.font  = HEADER_FONT
-        cell.fill  = HEADER_FILL
-        cell.alignment = Alignment(horizontal="right", vertical="center", wrap_text=True)
-        ws.column_dimensions[get_column_letter(col_i)].width = width
-    ws.row_dimensions[1].height = 22
+
+    headers = ["الأيام", "المقررات"] + target_depts + ["الإجمالي الكلي"]
+    ws.column_dimensions[get_column_letter(1)].width = 6
+    ws.column_dimensions[get_column_letter(2)].width = 40
+    for i in range(len(target_depts)):
+        ws.column_dimensions[get_column_letter(3 + i)].width = 12
+    ws.column_dimensions[get_column_letter(3 + len(target_depts))].width = 14
+
+    current_row = 1
+
+    for iso_date, courses in sorted(schedule_dict.items()):
+        day_courses = []
+        for c in courses:
+            cid = c["course_id"]
+            info = graph.course_map.get(cid)
+            if not info:
+                continue
+            
+            course_variants = {}
+            for d in target_depts:
+                if d in info.variants:
+                    course_variants[d] = info.variants[d]
+                    
+            if course_variants:
+                day_courses.append((cid, info, course_variants))
+
+        if not day_courses:
+            continue
+
+        start_row = current_row
+
+        # Write Header Row
+        for col_i, header in enumerate(headers, start=1):
+            cell = ws.cell(row=current_row, column=col_i)
+            cell.value = header
+            cell.font = BOLD_FONT
+            cell.fill = HEADER_FILL
+            cell.border = THIN_BORDER
+            cell.alignment = CENTER_ALIGN
+        
+        ws.row_dimensions[current_row].height = 60
+        current_row += 1
+
+        # Write Totals Row
+        dept_totals = {d: 0 for d in target_depts}
+        day_grand_total = 0
+        for (_, info, variants) in day_courses:
+            for dept in target_depts:
+                if dept in info.dept_students:
+                    c_dept_count = len(info.dept_students[dept])
+                    dept_totals[dept] += c_dept_count
+                    day_grand_total += c_dept_count
+
+        ws.cell(row=current_row, column=2, value="").border = THIN_BORDER
+        for i, dept in enumerate(target_depts, start=3):
+            cell = ws.cell(row=current_row, column=i)
+            cell.value = str(dept_totals[dept]) if dept_totals[dept] > 0 else ""
+            cell.font = TOTALS_FONT
+            cell.border = THIN_BORDER
+            cell.alignment = CENTER_ALIGN
+        
+        total_cell = ws.cell(row=current_row, column=3 + len(target_depts))
+        total_cell.value = str(day_grand_total) if day_grand_total > 0 else ""
+        total_cell.font = TOTALS_FONT
+        total_cell.border = THIN_BORDER
+        total_cell.alignment = CENTER_ALIGN
+        
+        current_row += 1
+
+        # Write Course Rows
+        for (cid, info, course_variants) in day_courses:
+            names_list = []
+            for dept, variants in course_variants.items():
+                for v in variants:
+                    level_str = f" {v[0]}" if v[0] else ""
+                    names_list.append(f"{v[1]}{level_str}")
+            
+            unique_names = list(dict.fromkeys(names_list))
+            names_str = "\n".join(unique_names)
+
+            ws.cell(row=current_row, column=2, value=names_str).font = BOLD_FONT
+            ws.cell(row=current_row, column=2).border = THIN_BORDER
+            ws.cell(row=current_row, column=2).alignment = Alignment(horizontal="right", vertical="center", wrap_text=True)
+            
+            course_grand_total = 0
+            for i, dept in enumerate(target_depts, start=3):
+                cell = ws.cell(row=current_row, column=i)
+                count = len(info.dept_students.get(dept, set()))
+                cell.value = count if count > 0 else ""
+                cell.font = NORMAL_FONT
+                cell.border = THIN_BORDER
+                cell.alignment = CENTER_ALIGN
+                course_grand_total += count
+
+            total_cell = ws.cell(row=current_row, column=3 + len(target_depts))
+            total_cell.value = course_grand_total if course_grand_total > 0 else ""
+            total_cell.font = BOLD_FONT
+            total_cell.border = THIN_BORDER
+            total_cell.alignment = CENTER_ALIGN
+
+            # Expand row height to fit all variant names gracefully
+            num_lines = max(1, len(unique_names))
+            ws.row_dimensions[current_row].height = max(30, 20 * num_lines)
+
+            current_row += 1
+
+        # Format Date Cell
+        dt = datetime.date.fromisoformat(iso_date)
+        arabic_days = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الاحد"]
+        arabic_months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+        day_name = arabic_days[dt.weekday()]
+        month_name = arabic_months[dt.month - 1]
+        
+        def to_arabic_numeral(n: int) -> str:
+            return "".join(chr(ord(c) + 1584) for c in str(n))
+            
+        date_str = f"{day_name} {to_arabic_numeral(dt.day)} {month_name} {to_arabic_numeral(dt.year)}"
+
+        ws.merge_cells(start_row=start_row, start_column=1, end_row=current_row - 1, end_column=1)
+        day_cell = ws.cell(row=start_row, column=1)
+        day_cell.value = date_str
+        day_cell.font = BOLD_FONT
+        day_cell.fill = DAY_FILL
+        day_cell.alignment = DAY_ALIGN
+
+        for r in range(start_row, current_row):
+            ws.cell(row=r, column=1).border = THIN_BORDER
+
+        # empty row space between days
+        current_row += 1
 
 
-def _stream(buf: io.BytesIO, filename: str) -> StreamingResponse:
+def _stream_wb(wb: Workbook, filename: str) -> StreamingResponse:
+    buf = io.BytesIO()
+    wb.save(buf)
     buf.seek(0)
     encoded = quote(filename)
     return StreamingResponse(
@@ -62,52 +192,17 @@ def _stream(buf: io.BytesIO, filename: str) -> StreamingResponse:
 
 @router.get("/master")
 async def export_master(session_id: str):
-    """
-    Download the complete schedule as an Excel file.
-
-    Columns:
-      التاريخ | رمز المادة | الأقسام والمسميات | عدد الطلاب
-
-    One row per course. Cross-department name variants are listed together
-    in the Departments column (one line per department).
-    """
     session = _get_valid_session(session_id)
     last = session.validation_report.get("last_schedule")
     if not last:
         raise HTTPException(status_code=422, detail="لم يتم تشغيل الجدولة بعد لهذه الجلسة.")
 
-    result  = last["result"]
-    graph   = last["graph"]
-
-    headers = ["التاريخ", "رمز المادة", "مسميات الأقسام", "عدد الطلاب"]
-    widths  = [16, 14, 52, 14]
-
-    rows: list[tuple] = []
-    for iso_date, courses in sorted(last["schedule_dict"].items()):
-        for c in courses:
-            cid  = c["course_id"]
-            info = graph.course_map.get(cid)
-            names_str = "\n".join(f"{dept}: {name}" for dept, name in (info.dept_names.items() if info else {}.items()))
-            students  = len(info.students) if info else 0
-            rows.append((iso_date, cid, names_str, students))
-
-    buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
-        df = pd.DataFrame(rows, columns=headers)
-        df.to_excel(writer, index=False, sheet_name="الجدول الكامل")
-        ws = writer.sheets["الجدول الكامل"]
-        _style_ws(ws, headers, widths)
-
-        # Style data rows
-        for row_i, row_data in enumerate(rows, start=2):
-            for col_i in range(1, len(headers) + 1):
-                cell = ws.cell(row=row_i, column=col_i)
-                cell.font = DATE_FONT if col_i == 1 else BODY_FONT
-                cell.alignment = Alignment(horizontal="right", vertical="center", wrap_text=True)
-                cell.fill = ACCENT_FILL if row_i % 2 == 0 else PatternFill()
-            ws.row_dimensions[row_i].height = max(30, 15 * len(str(row_data[2]).split("\n")))
-
-    return _stream(buf, "الجدول_الكامل.xlsx")
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "الجدول الكامل"
+    _build_matrix_sheet(ws, last["schedule_dict"], last["graph"], ALL_DEPTS)
+    
+    return _stream_wb(wb, "الجدول_الكامل.xlsx")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -119,58 +214,38 @@ async def export_department(
     dept_name: str = Path(..., description="اسم القسم بالعربية"),
     session_id: str = "",
 ):
-    """
-    Download the schedule for a single department.
-
-    Only courses that have an entry in this department's name mapping are
-    included. Display names use ONLY that department's المقرر value —
-    no cross-department name leakage. (Acceptance Criterion 5)
-
-    Columns:
-      التاريخ | رمز المادة | اسم المقرر | عدد الطلاب
-    """
     session = _get_valid_session(session_id)
     last = session.validation_report.get("last_schedule")
     if not last:
         raise HTTPException(status_code=422, detail="لم يتم تشغيل الجدولة بعد لهذه الجلسة.")
 
     graph = last["graph"]
-
-    headers = ["التاريخ", "رمز المادة", "اسم المقرر", "عدد الطلاب"]
-    widths  = [16, 14, 46, 14]
-
-    rows: list[tuple] = []
-    for iso_date, courses in sorted(last["schedule_dict"].items()):
+    
+    # Verify department has courses
+    has_courses = False
+    for iso_date, courses in last["schedule_dict"].items():
         for c in courses:
-            cid  = c["course_id"]
-            info = graph.course_map.get(cid)
-            if not info or dept_name not in info.dept_names:
-                continue        # skip courses not in this department
-            dept_display_name = info.dept_names[dept_name]   # ONLY this dept's name
-            students = len(info.students)
-            rows.append((iso_date, cid, dept_display_name, students))
-
-    if not rows:
+            info = graph.course_map.get(c["course_id"])
+            if info and dept_name in info.variants:
+                has_courses = True
+                break
+        if has_courses:
+            break
+            
+    if not has_courses:
         raise HTTPException(
             status_code=404,
             detail=f"القسم '{dept_name}' غير موجود في بيانات الجلسة أو ليس له مواد مجدولة.",
         )
 
     safe_name = dept_name.replace("/", "_").replace("\\", "_")
-    buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
-        df = pd.DataFrame(rows, columns=headers)
-        df.to_excel(writer, index=False, sheet_name=f"جدول {safe_name[:25]}")
-        ws = list(writer.sheets.values())[0]
-        _style_ws(ws, headers, widths)
-        for row_i, _ in enumerate(rows, start=2):
-            for col_i in range(1, len(headers) + 1):
-                cell = ws.cell(row=row_i, column=col_i)
-                cell.font = DATE_FONT if col_i == 1 else BODY_FONT
-                cell.alignment = Alignment(horizontal="right", vertical="center")
-                cell.fill = ACCENT_FILL if row_i % 2 == 0 else PatternFill()
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"جدول {safe_name[:25]}"
+    _build_matrix_sheet(ws, last["schedule_dict"], last["graph"], [dept_name])
 
-    return _stream(buf, f"جدول_{safe_name}.xlsx")
+    return _stream_wb(wb, f"جدول_{safe_name}.xlsx")
 
 
 # ─── Helper ───────────────────────────────────────────────────────────────────
@@ -202,6 +277,23 @@ async def export_infeasibility(session_id: str):
     if getattr(result, "status", None) != "INFEASIBLE":
         raise HTTPException(status_code=400, detail="الجدول ليس في حالة غير ممكنة.")
 
+    # Using the old styling definitions since this is a data report, not the matrix UI
+    HEADER_FILL = PatternFill("solid", fgColor="1c2330")
+    HEADER_FONT = Font(bold=True, color="00b4d8", name="Cairo", size=11)
+    ACCENT_FILL = PatternFill("solid", fgColor="161b22")
+    BODY_FONT   = Font(color="e6edf3", name="Cairo", size=10)
+
+    def _style_ws_inf(ws, headers: list[str], col_widths: list[int]) -> None:
+        ws.sheet_view.rightToLeft = True
+        for col_i, (header, width) in enumerate(zip(headers, col_widths), start=1):
+            cell = ws.cell(row=1, column=col_i)
+            cell.value = header
+            cell.font  = HEADER_FONT
+            cell.fill  = HEADER_FILL
+            cell.alignment = Alignment(horizontal="right", vertical="center", wrap_text=True)
+            ws.column_dimensions[get_column_letter(col_i)].width = width
+        ws.row_dimensions[1].height = 22
+
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         # Sheet 1: Summary
@@ -211,7 +303,7 @@ async def export_infeasibility(session_id: str):
             ("أيام إضافية مطلوبة", result.additional_days_needed),
         ], columns=["المقياس", "القيمة"])
         df_summary.to_excel(writer, index=False, sheet_name="الملخص")
-        _style_ws(writer.sheets["الملخص"], ["المقياس", "القيمة"], [30, 20])
+        _style_ws_inf(writer.sheets["الملخص"], ["المقياس", "القيمة"], [30, 20])
 
         # Sheet 2: Top Students
         if result.top_students:
@@ -223,7 +315,7 @@ async def export_infeasibility(session_id: str):
         # Sheet 3: Bottleneck Courses
         if result.bottleneck_courses:
             rows = [
-                (c["course_id"], c["degree"], " | ".join(f"{d}: {n}" for d, n in c["display_names"].items()))
+                (c["course_id"], c["degree"], " | ".join(f"{d}: {', '.join(v['display_name'] for v in deptVs)}" for d, deptVs in c["variants"].items()))
                 for c in result.bottleneck_courses
             ]
             df_courses = pd.DataFrame(rows, columns=["رمز المادة", "درجة التعارض", "الأقسام والمسميات"])

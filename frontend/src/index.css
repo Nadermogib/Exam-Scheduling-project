@@ -5,21 +5,21 @@
 
 /* ---------- CSS custom properties (design tokens) ---------- */
 :root {
-  /* Colour palette — deep navy + accent teal */
-  --color-bg:          #0d1117;
-  --color-surface:     #161b22;
-  --color-surface-2:   #1c2330;
-  --color-border:      #30363d;
+  /* Colour palette — light gray + accent blue */
+  --color-bg:          #f8fafc;
+  --color-surface:     #ffffff;
+  --color-surface-2:   #f1f5f9;
+  --color-border:      #e2e8f0;
 
-  --color-accent:      #00b4d8;
-  --color-accent-dim:  #0077a8;
-  --color-success:     #3fb950;
-  --color-warning:     #d29922;
-  --color-danger:      #f85149;
+  --color-accent:      #2563eb;
+  --color-accent-dim:  #1d4ed8;
+  --color-success:     #16a34a;
+  --color-warning:     #d97706;
+  --color-danger:      #dc2626;
 
-  --color-text-primary:   #e6edf3;
-  --color-text-secondary: #8b949e;
-  --color-text-inverse:   #0d1117;
+  --color-text-primary:   #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-inverse:   #ffffff;
 
   /* Typography */
   --font-family: 'Cairo', system-ui, sans-serif;
@@ -50,12 +50,12 @@
   --radius-xl: 24px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
 
-  --color-error:       #f85149;
-  --color-text-muted:  #6e7681;
+  --color-error:       #dc2626;
+  --color-text-muted:  #94a3b8;
 
   /* Spacing additions */
   --space-7:  1.75rem;
@@ -91,11 +91,11 @@
 
 .btn-primary {
   background: var(--color-accent);
-  color: #0d1117;
+  color: var(--color-text-inverse);
 }
 .btn-primary:not(:disabled):hover {
-  background: #00caf0;
-  box-shadow: 0 0 20px rgba(0,180,216,0.35);
+  background: var(--color-accent-dim);
+  box-shadow: 0 0 20px rgba(37,99,235,0.25);
   transform: translateY(-1px);
 }
 
@@ -115,8 +115,8 @@
   border: 1px solid transparent;
 }
 .btn-ghost:not(:disabled):hover {
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
+  background: var(--color-surface-2);
+  color: var(--color-accent);
 }
 
 .btn-loading {
@@ -130,8 +130,8 @@
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(13,17,23,0.3);
-  border-top-color: #0d1117;
+  border: 2px solid rgba(15,23,42,0.15);
+  border-top-color: var(--color-text-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

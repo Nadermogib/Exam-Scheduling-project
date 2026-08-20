@@ -1,0 +1,280 @@
+{
+  "CourseReferenceTable.jsx": [
+    [
+      55,
+      "⏳",
+      "if (loading) return <div style={{ padding: 'var(--space-4)' }}>⏳ جارٍ تحميل البيانات المرجعية...</div>;"
+    ]
+  ],
+  "PrintScheduleTable.jsx": [
+    [
+      206,
+      "⚙",
+      "<span style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem' }}>⚙️ إعدادات الترويسة</span>"
+    ],
+    [
+      206,
+      "⚙️",
+      "<span style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem' }}>⚙️ إعدادات الترويسة</span>"
+    ],
+    [
+      209,
+      "⏳",
+      "⏳ جارٍ الحفظ…"
+    ],
+    [
+      251,
+      "📁",
+      "📁 تغيير الشعار"
+    ],
+    [
+      348,
+      "⚠️",
+      "⚠️ الجدول كبير جدًا للتصدير كصورة واحدة، يُفضل تصغير الفترة الزمنية أو تصفية قسم واحد ثم التصدير."
+    ],
+    [
+      358,
+      "⬇",
+      "{exporting ? '⏳ جارٍ التصدير…' : '⬇ تصدير الجدول (PNG)'}"
+    ],
+    [
+      358,
+      "⏳",
+      "{exporting ? '⏳ جارٍ التصدير…' : '⬇ تصدير الجدول (PNG)'}"
+    ]
+  ],
+  "StepBar.jsx": [
+    [
+      21,
+      "✓",
+      "{done ? '✓' : step.id + 1}"
+    ]
+  ],
+  "InfeasibilityPage.jsx": [
+    [
+      59,
+      "⚠️",
+      "⚠️ الجدولة غير ممكنة في الفترة المحددة"
+    ],
+    [
+      70,
+      "📅",
+      "<MetricCard icon=\"📅\" value={available_days}       label=\"أيام متاحة حالياً\" />"
+    ],
+    [
+      72,
+      "➕",
+      "<MetricCard icon=\"➕\" value={additional_days_needed} label=\"أيام إضافية مطلوبة\" danger />"
+    ],
+    [
+      101,
+      "💡",
+      "<div className=\"results-section__title\"><span>💡</span>توصيات محددة</div>"
+    ],
+    [
+      118,
+      "🔍",
+      "{s.action === 'extend_period' ? '⟳ تمديد فترة الامتحانات' : '🔍 مراجعة بيانات الطالب'}"
+    ],
+    [
+      221,
+      "📥",
+      "<span className=\"export-bar__title\">📥 تصدير التقرير:</span>"
+    ],
+    [
+      232,
+      "⬇",
+      "{dlExport ? '⏳ جارٍ التصدير…' : '⬇ تقرير عدم الإمكانية (Excel)'}"
+    ],
+    [
+      232,
+      "⏳",
+      "{dlExport ? '⏳ جارٍ التصدير…' : '⬇ تقرير عدم الإمكانية (Excel)'}"
+    ]
+  ],
+  "ProcessingPage.jsx": [
+    [
+      6,
+      "📂",
+      "{ id: 0, icon: '📂', label: 'قراءة البيانات من الجلسة' },"
+    ],
+    [
+      9,
+      "✅",
+      "{ id: 3, icon: '✅', label: 'التحقق من صحة النتائج' },"
+    ],
+    [
+      60,
+      "⚠️",
+      "{hasError ? '⚠️' : stage >= 3 ? '✅' : '⚙️'}"
+    ],
+    [
+      60,
+      "✅",
+      "{hasError ? '⚠️' : stage >= 3 ? '✅' : '⚙️'}"
+    ],
+    [
+      60,
+      "⚙",
+      "{hasError ? '⚠️' : stage >= 3 ? '✅' : '⚙️'}"
+    ],
+    [
+      60,
+      "⚙️",
+      "{hasError ? '⚠️' : stage >= 3 ? '✅' : '⚙️'}"
+    ],
+    [
+      91,
+      "✅",
+      "<span className=\"stage-item__icon\">{done ? '✅' : s.icon}</span>"
+    ],
+    [
+      107,
+      "⚠️",
+      "<span>⚠️</span>"
+    ]
+  ],
+  "ResultsPage.jsx": [
+    [
+      196,
+      "✅",
+      "<SummaryCard icon=\"✅\" value=\"صفر\" label=\"تعارضات\" highlight />"
+    ],
+    [
+      198,
+      "📅",
+      "<SummaryCard icon=\"📅\" value={days_used}     label=\"أيام امتحانات\" />"
+    ],
+    [
+      199,
+      "📊",
+      "<SummaryCard icon=\"📊\" value={max_load}      label=\"أقصى مواد/يوم\" />"
+    ],
+    [
+      200,
+      "⚡",
+      "<SummaryCard icon=\"⚡\" value={avg_courses_per_day} label=\"متوسط مواد/يوم\" />"
+    ],
+    [
+      209,
+      "🔍",
+      "placeholder=\"🔍 ابحث برمز المادة أو اسمها…\""
+    ],
+    [
+      283,
+      "📥",
+      "<span className=\"export-bar__title\">📥 تصدير الجدول:</span>"
+    ],
+    [
+      294,
+      "⬇",
+      "{dlMaster ? '⏳ جارٍ التصدير…' : '⬇ الجدول الكامل (Excel)'}"
+    ],
+    [
+      294,
+      "⏳",
+      "{dlMaster ? '⏳ جارٍ التصدير…' : '⬇ الجدول الكامل (Excel)'}"
+    ],
+    [
+      308,
+      "⬇",
+      "{dlDept ? '⏳ …' : `⬇ جدول قسم ${deptFilter}`}"
+    ],
+    [
+      308,
+      "⏳",
+      "{dlDept ? '⏳ …' : `⬇ جدول قسم ${deptFilter}`}"
+    ],
+    [
+      314,
+      "🖨️",
+      "<Section icon=\"🖨️\" title=\"جدول الطباعة الرسمي\" defaultOpen={false}>"
+    ],
+    [
+      314,
+      "🖨",
+      "<Section icon=\"🖨️\" title=\"جدول الطباعة الرسمي\" defaultOpen={false}>"
+    ],
+    [
+      334,
+      "📋",
+      "<Section icon=\"📋\" title=\"جدول مرجعي: رموز المواد ومسمياتها\" defaultOpen={false}>"
+    ]
+  ],
+  "SettingsPage.jsx": [
+    [
+      179,
+      "📅",
+      "<span>📅</span> نطاق الفترة الزمنية"
+    ],
+    [
+      204,
+      "⚠️",
+      "{dateError && <p className=\"field-error\">⚠️ {dateError}</p>}"
+    ],
+    [
+      286,
+      "⚠️",
+      "<span>⚠️</span>"
+    ]
+  ],
+  "UploadPage.jsx": [
+    [
+      6,
+      "📋",
+      "{ icon: '📋', text: 'الصيغة: ملف Excel بامتداد .xlsx فقط' },"
+    ],
+    [
+      116,
+      "✅",
+      "{file ? '✅' : '📂'}"
+    ],
+    [
+      116,
+      "📂",
+      "{file ? '✅' : '📂'}"
+    ],
+    [
+      144,
+      "⚠️",
+      "<span>⚠️</span>"
+    ],
+    [
+      172,
+      "⬇",
+      "{dlLoading ? 'جارٍ التحميل...' : '⬇ تحميل قالب Excel'}"
+    ]
+  ],
+  "ValidationPage.jsx": [
+    [
+      58,
+      "✏️",
+      ">✏️</span>"
+    ],
+    [
+      58,
+      "✏",
+      ">✏️</span>"
+    ],
+    [
+      92,
+      "✅",
+      "{severity === 'critical' ? '✅ لا توجد أخطاء حرجة' : '✅ لا توجد تحذيرات'}"
+    ],
+    [
+      178,
+      "✅",
+      "<span>{canProceed ? '✅' : '🚫'}</span>"
+    ],
+    [
+      206,
+      "🔴",
+      "<span>{canProceed ? '🟢' : '🔴'}</span>"
+    ],
+    [
+      206,
+      "🟢",
+      "<span>{canProceed ? '🟢' : '🔴'}</span>"
+    ]
+  ]
+}
