@@ -76,3 +76,36 @@
     font-size: 0.65rem;
   }
 }
+
+/* ── Print Styles ───────────────────────────────────────────────────── */
+@media print {
+  .app-header,
+  .step-bar,
+  .summary-cards,
+  .controls-bar,
+  .export-bar,
+  .results-section__header,
+  .toast-container {
+    display: none !important;
+  }
+  
+  .results-section {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+  
+  .app {
+    background: white;
+  }
+  
+  .app-content {
+    padding: 0;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}

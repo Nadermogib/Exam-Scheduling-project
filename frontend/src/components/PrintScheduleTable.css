@@ -21,7 +21,7 @@
 /* ── Controls bar (above the table — not exported) ───────────────────────────── */
 .print-table-controls {
   background: var(--color-surface, #ffffff);
-  border-bottom: 1px solid var(--color-border, rgba(0,0,0,0.1));
+  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
   padding: 24px;
   display: flex;
   gap: 32px;
@@ -289,7 +289,7 @@
   position: sticky;
   right: 0;
   z-index: 10;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05);
 }
 
 .print-grid-table th.col-day {
@@ -328,6 +328,7 @@
 .print-grid-table tbody tr:nth-child(even) td.col-dept {
   background: #f4faff;
 }
+
 .print-grid-table tbody tr:nth-child(odd) td.col-dept {
   background: #ffffff;
 }
@@ -349,6 +350,7 @@
   border-bottom: 1px dotted #d5e8f5;
   line-height: 1.4;
 }
+
 .print-course-entry:last-child {
   border-bottom: none;
 }
@@ -377,22 +379,37 @@
   gap: 12px;
   padding: 16px 20px;
   background: var(--color-surface, #ffffff);
-  border-top: 1px solid var(--color-border, rgba(0,0,0,0.1));
+  border-top: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
 }
 
 /* ── @media print — if user prints directly via browser ──────────────────────── */
 @media print {
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .print-table-controls,
   .print-table-actions {
     display: none !important;
   }
+
   .print-table-wrapper {
     box-shadow: none;
     border-radius: 0;
+    /* Zoom scales the table proportionally so it fits the PDF width without squishing text */
+    zoom: 0.75;
   }
+
   .print-grid-table {
     font-size: 9pt;
   }
+
   .print-grid-table th,
   .print-grid-table td {
     page-break-inside: avoid;
