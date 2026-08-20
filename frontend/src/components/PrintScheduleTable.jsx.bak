@@ -1,5 +1,5 @@
-/**
- * PrintScheduleTable — Phase 8-C / 8-D / 8-E
+﻿/**
+ * PrintScheduleTable â€” Phase 8-C / 8-D / 8-E
  *
  * Renders a print-ready, university-style exam grid table:
  *   Rows    = exam days (Arabic day name + date)
@@ -7,38 +7,37 @@
  *
  * Props
  * -----
- *   schedule    {Object}  — { "YYYY-MM-DD": [{course_id, display_names, academic_level, ...}] }
- *   departments {string[]} — ordered list of all dept names (without the "" first entry)
- *   deptFilter  {string}  — currently selected dept ("" = all)
- *   exportRef   {ref}     — forwarded ref on the exportable area div (for html2canvas)
- *   headerText  {string}  — editable title (controlled from parent)
- *   onHeaderChange {fn}   — called when user edits the title text
- *   universityText {string} — editable university/faculty name (controlled from parent)
- *   onUniversityTextChange {fn} — called when user edits the university text
- *   logoDataUrl {string|null} — base-64 data URL of custom logo, or null → default
- *   onLogoUpload  {fn}    — called with new base-64 data URL when user uploads
- *   onLogoRemove  {fn}    — called when user clicks "إزالة الشعار المخصص"
- */
-import { useRef, useState, useEffect } from 'react';
+ *   schedule    {Object}  â€” { "YYYY-MM-DD": [{course_id, display_names, academic_level, ...}] }
+ *   departments {string[]} â€” ordered list of all dept names (without the "" first entry)
+ *   deptFilter  {string}  â€” currently selected dept ("" = all)
+ *   exportRef   {ref}     â€” forwarded ref on the exportable area div (for html2canvas)
+ *   headerText  {string}  â€” editable title (controlled from parent)
+ *   onHeaderChange {fn}   â€” called when user edits the title text
+ *   universityText {string} â€” editable university/faculty name (controlled from parent)
+ *   onUniversityTextChange {fn} â€” called when user edits the university text
+ *   logoDataUrl {string|null} â€” base-64 data URL of custom logo, or null â†’ default
+ *   onLogoUpload  {fn}    â€” called with new base-64 data URL when user uploads
+ *   onLogoRemove  {fn}    â€” called when user clicks "ط¥ط²ط§ظ„ط© ط§ظ„ط´ط¹ط§ط± ط§ظ„ظ…ط®طµطµ"
+import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import { Settings, Loader, FolderOpen, AlertTriangle, Download, Printer } from 'lucide-react';
 import defaultLogo from '../assets/Taizz_University_logo.jpg';
 import './PrintScheduleTable.css';
 
-// ── Utility: normalise academic_level to "فX" format ─────────────────────────
+// â”€â”€ Utility: normalise academic_level to "ظپX" format â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function normalizeLevel(raw) {
   if (!raw || raw.trim() === '') return '';
   let s = raw.trim();
   // Strip known Arabic prefixes using RegExp constructor to bypass oxc parser bugs
-  s = s.replace(new RegExp('^الفصل\\s+ال\\u0640?\\s*', 'u'), '');
-  s = s.replace(new RegExp('^الفصل\\s*', 'u'), '');
-  s = s.replace(new RegExp('^ف+', 'u'), '');  // strip one or more leading ف
+  s = s.replace(new RegExp('^ط§ظ„ظپطµظ„\\s+ط§ظ„\\u0640?\\s*', 'u'), '');
+  s = s.replace(new RegExp('^ط§ظ„ظپطµظ„\\s*', 'u'), '');
+  s = s.replace(new RegExp('^ظپ+', 'u'), '');  // strip one or more leading ظپ
   s = s.trim();
-  return s ? `ف${s}` : '';
+  return s ? `ظپ${s}` : '';
 }
 
-// ── Utility: get Arabic weekday name from an ISO date string ──────────────────
-const DAY_NAMES_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+// â”€â”€ Utility: get Arabic weekday name from an ISO date string â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const DAY_NAMES_AR = ['ط§ظ„ط£ط­ط¯', 'ط§ظ„ط§ط«ظ†ظٹظ†', 'ط§ظ„ط«ظ„ط§ط«ط§ط،', 'ط§ظ„ط£ط±ط¨ط¹ط§ط،', 'ط§ظ„ط®ظ…ظٹط³', 'ط§ظ„ط¬ظ…ط¹ط©', 'ط§ظ„ط³ط¨طھ'];
 
 function arabicDayName(isoDate) {
   // Parse as local date to avoid UTC offset issues
@@ -47,18 +46,18 @@ function arabicDayName(isoDate) {
   return DAY_NAMES_AR[dayIndex] ?? isoDate;
 }
 
-// ── Utility: compute dynamic default academic year header ─────────────────────
+// â”€â”€ Utility: compute dynamic default academic year header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function defaultHeaderText() {
   const y = new Date().getFullYear();
-  return `جدول اختبارات الدور التكميلي للعام الجامعي ${y - 1}/${y}`;
+  return `ط¬ط¯ظˆظ„ ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ط¯ظˆط± ط§ظ„طھظƒظ…ظٹظ„ظٹ ظ„ظ„ط¹ط§ظ… ط§ظ„ط¬ط§ظ…ط¹ظٹ ${y - 1}/${y}`;
 }
 
-// ── Sub-component: a single table cell ───────────────────────────────────────
+// â”€â”€ Sub-component: a single table cell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DeptCell({ courses, deptName }) {
   if (!courses || courses.length === 0) {
     return (
       <td className="col-dept">
-        <span className="print-cell-empty">—</span>
+        <span className="print-cell-empty">â€”</span>
       </td>
     );
   }
@@ -100,7 +99,7 @@ function DeptCell({ courses, deptName }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function PrintScheduleTable({
   schedule,
   departments,
@@ -119,16 +118,7 @@ export default function PrintScheduleTable({
   const [exporting, setExporting] = useState(false);
   const [exportWarn, setExportWarn] = useState(false);
 
-  // ── Dynamic Title for PDF Print (Phase 8) ───────────────────────────────────
-  useEffect(() => {
-    const defaultTitle = "نظام جدولة الامتحانات | Exam Scheduling System";
-    document.title = deptFilter ? `جدول_قسم_${deptFilter.replace(/\s+/g, '_')}` : 'الجدول_الكامل';
-    return () => {
-      document.title = defaultTitle;
-    };
-  }, [deptFilter]);
-
-  // ── PNG export handler (Phase 8-E) ────────────────────────────────────────
+  // â”€â”€ PNG export handler (Phase 8-E) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const MAX_EXPORT_HEIGHT_PX = 8000;
 
   async function exportTable() {
@@ -170,11 +160,11 @@ export default function PrintScheduleTable({
       const a = document.createElement('a');
       a.href = dataUrl;
       const deptSuffix = deptFilter ? `_${deptFilter}` : '';
-      a.download = `جدول_الامتحانات${deptSuffix}.png`;
+      a.download = `ط¬ط¯ظˆظ„_ط§ظ„ط§ظ…طھط­ط§ظ†ط§طھ${deptSuffix}.png`;
       a.click();
     } catch (err) {
       console.error('Export failed:', err);
-      alert('تعذّر تصدير الجدول. يُرجى المحاولة مجدداً.');
+      alert('طھط¹ط°ظ‘ط± طھطµط¯ظٹط± ط§ظ„ط¬ط¯ظˆظ„. ظٹظڈط±ط¬ظ‰ ط§ظ„ظ…ط­ط§ظˆظ„ط© ظ…ط¬ط¯ط¯ط§ظ‹.');
     } finally {
       setExporting(false);
     }
@@ -204,65 +194,65 @@ export default function PrintScheduleTable({
 
   const logoSrc = logoDataUrl || defaultLogo;
   const displayHeaderText = headerText || defaultHeaderText();
-  const displayUniversityText = universityText || "جامعة تعز — كلية السعيد للهندسة وتقنية المعلومات";
+  const displayUniversityText = universityText || "ط¬ط§ظ…ط¹ط© طھط¹ط² â€” ظƒظ„ظٹط© ط§ظ„ط³ط¹ظٹط¯ ظ„ظ„ظ‡ظ†ط¯ط³ط© ظˆطھظ‚ظ†ظٹط© ط§ظ„ظ…ط¹ظ„ظˆظ…ط§طھ";
 
   return (
     <div className="print-table-wrapper">
 
-      {/* ── Controls (not exported) ─────────────────────────────────────── */}
+      {/* â”€â”€ Controls (not exported) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="print-table-controls">
         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '-8px' }}>
-          <span style={{ color: 'var(--color-text-primary)', fontWeight: 700, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Settings size={18} /> إعدادات الترويسة</span>
+          <span style={{ color: 'var(--color-text-primary)', fontWeight: 700, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}><Settings size={18} /> ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„طھط±ظˆظٹط³ط©</span>
           {saving && (
             <span style={{ fontSize: '0.85rem', color: '#f59e0b', fontWeight: 600, background: 'rgba(245, 158, 11, 0.15)', padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Loader size={14} /> جارٍ الحفظ…
+              <Loader size={14} /> ط¬ط§ط±ظچ ط§ظ„ط­ظپط¸â€¦
             </span>
           )}
         </div>
 
         <div className="print-controls-inputs">
           <div className="print-input-group">
-            <label htmlFor="print-university-text">الجامعة والكلية:</label>
+            <label htmlFor="print-university-text">ط§ظ„ط¬ط§ظ…ط¹ط© ظˆط§ظ„ظƒظ„ظٹط©:</label>
             <input
               id="print-university-text"
               type="text"
               value={universityText ?? ''}
-              placeholder="جامعة تعز — كلية السعيد للهندسة وتقنية المعلومات"
+              placeholder="ط¬ط§ظ…ط¹ط© طھط¹ط² â€” ظƒظ„ظٹط© ط§ظ„ط³ط¹ظٹط¯ ظ„ظ„ظ‡ظ†ط¯ط³ط© ظˆطھظ‚ظ†ظٹط© ط§ظ„ظ…ط¹ظ„ظˆظ…ط§طھ"
               onChange={(e) => onUniversityTextChange(e.target.value)}
-              aria-label="تعديل اسم الجامعة والكلية"
+              aria-label="طھط¹ط¯ظٹظ„ ط§ط³ظ… ط§ظ„ط¬ط§ظ…ط¹ط© ظˆط§ظ„ظƒظ„ظٹط©"
               dir="rtl"
             />
           </div>
           <div className="print-input-group">
-            <label htmlFor="print-header-text">عنوان الجدول:</label>
+            <label htmlFor="print-header-text">ط¹ظ†ظˆط§ظ† ط§ظ„ط¬ط¯ظˆظ„:</label>
             <input
               id="print-header-text"
               type="text"
               value={headerText ?? ''}
               placeholder={defaultHeaderText()}
               onChange={(e) => onHeaderChange(e.target.value)}
-              aria-label="تعديل عنوان الجدول"
+              aria-label="طھط¹ط¯ظٹظ„ ط¹ظ†ظˆط§ظ† ط§ظ„ط¬ط¯ظˆظ„"
               dir="rtl"
             />
           </div>
         </div>
 
         <div className="print-controls-logo">
-          <label>شعار الجامعة:</label>
+          <label>ط´ط¹ط§ط± ط§ظ„ط¬ط§ظ…ط¹ط©:</label>
           <div className="print-logo-box">
-            <img src={logoSrc} alt="شعار الجامعة" className="print-table-logo-preview" />
+            <img src={logoSrc} alt="ط´ط¹ط§ط± ط§ظ„ط¬ط§ظ…ط¹ط©" className="print-table-logo-preview" />
             <div className="print-logo-actions">
               <button
                 className="btn-logo-upload"
                 onClick={() => fileInputRef.current?.click()}
-                title="رفع شعار مخصص"
+                title="ط±ظپط¹ ط´ط¹ط§ط± ظ…ط®طµطµ"
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <FolderOpen size={16} /> تغيير الشعار
+                <FolderOpen size={16} /> طھط؛ظٹظٹط± ط§ظ„ط´ط¹ط§ط±
               </button>
               {logoDataUrl && (
-                <button className="btn-logo-remove" onClick={onLogoRemove} title="إزالة الشعار المخصص">
-                  ✕ حذف
+                <button className="btn-logo-remove" onClick={onLogoRemove} title="ط¥ط²ط§ظ„ط© ط§ظ„ط´ط¹ط§ط± ط§ظ„ظ…ط®طµطµ">
+                  âœ• ط­ط°ظپ
                 </button>
               )}
             </div>
@@ -273,19 +263,19 @@ export default function PrintScheduleTable({
             accept="image/*"
             style={{ display: 'none' }}
             onChange={handleLogoFile}
-            aria-label="رفع شعار مخصص"
+            aria-label="ط±ظپط¹ ط´ط¹ط§ط± ظ…ط®طµطµ"
           />
         </div>
       </div>
 
-      {/* ── Exportable area ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Exportable area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div ref={exportRef} className="print-table-export-area">
 
         {/* Header */}
         <div className="print-table-header">
-          {/* Logo box — right side (RTL) */}
+          {/* Logo box â€” right side (RTL) */}
           <div className="print-table-header__logo-box">
-            <img src={logoSrc} alt="شعار جامعة تعز" className="print-table-header__logo" />
+            <img src={logoSrc} alt="ط´ط¹ط§ط± ط¬ط§ظ…ط¹ط© طھط¹ط²" className="print-table-header__logo" />
           </div>
 
           {/* Centered title */}
@@ -305,7 +295,7 @@ export default function PrintScheduleTable({
           <table className="print-grid-table">
             <thead>
               <tr>
-                <th className="col-day">اليوم / التاريخ</th>
+                <th className="col-day">ط§ظ„ظٹظˆظ… / ط§ظ„طھط§ط±ظٹط®</th>
                 {activeDepts.map((dept) => (
                   <th key={dept}>{dept}</th>
                 ))}
@@ -318,7 +308,7 @@ export default function PrintScheduleTable({
                   ? courses.filter((c) => c.variants && deptFilter in c.variants)
                   : courses;
 
-                // Build a lookup: dept → courses for this day
+                // Build a lookup: dept â†’ courses for this day
                 const deptCourses = {};
                 for (const dept of activeDepts) {
                   deptCourses[dept] = dayCourses.filter((c) => c.variants && dept in c.variants);
@@ -341,7 +331,7 @@ export default function PrintScheduleTable({
         </div>
       </div>{/* end export area */}
 
-      {/* ── Export button (Phase 8-E) ─────────────────────────────────────── */}
+      {/* â”€â”€ Export button (Phase 8-E) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="print-table-actions">
         {exportWarn && (
           <div style={{
@@ -359,7 +349,7 @@ export default function PrintScheduleTable({
             justifyContent: 'center',
             gap: '8px'
           }}>
-            <AlertTriangle size={18} /> الجدول كبير جدًا للتصدير كصورة واحدة، يُفضل تصغير الفترة الزمنية أو تصفية قسم واحد ثم التصدير.
+            <AlertTriangle size={18} /> ط§ظ„ط¬ط¯ظˆظ„ ظƒط¨ظٹط± ط¬ط¯ظ‹ط§ ظ„ظ„طھطµط¯ظٹط± ظƒطµظˆط±ط© ظˆط§ط­ط¯ط©طŒ ظٹظڈظپط¶ظ„ طھطµط؛ظٹط± ط§ظ„ظپطھط±ط© ط§ظ„ط²ظ…ظ†ظٹط© ط£ظˆ طھطµظپظٹط© ظ‚ط³ظ… ظˆط§ط­ط¯ ط«ظ… ط§ظ„طھطµط¯ظٹط±.
           </div>
         )}
         <button
@@ -369,7 +359,7 @@ export default function PrintScheduleTable({
           onClick={() => window.print()}
           style={{ minWidth: '180px' }}
         >
-          <Printer size={16} /> طباعة / PDF
+          <Printer size={16} /> ط·ط¨ط§ط¹ط© / PDF
         </button>
         <button
           id="btn-export-png"
@@ -378,7 +368,7 @@ export default function PrintScheduleTable({
           onClick={exportTable}
           style={{ minWidth: '180px' }}
         >
-          {exporting ? <><Loader size={16} /> جارٍ التصدير…</> : <><Download size={16} /> حفظ كصورة (PNG)</>}
+          {exporting ? <><Loader size={16} /> ط¬ط§ط±ظچ ط§ظ„طھطµط¯ظٹط±â€¦</> : <><Download size={16} /> ط­ظپط¸ ظƒطµظˆط±ط© (PNG)</>}
         </button>
       </div>
 

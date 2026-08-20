@@ -16,10 +16,10 @@ function SummaryCard({ icon, value, label, highlight }) {
 }
 
 /* ── Collapsible section ───────────────────────────────────────────────────── */
-function Section({ title, icon, children, defaultOpen = true }) {
+function Section({ title, icon, children, defaultOpen = true, className = "" }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="results-section">
+    <div className={`results-section ${className}`}>
       <div
         className="results-section__header"
         onClick={() => setOpen((o) => !o)}
@@ -182,7 +182,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
   return (
     <main className="results-page">
       {/* ── Header ───────────────────────────────────────────────── */}
-      <div>
+      <div className="no-print">
         <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <PartyPopper size={28} color="var(--color-accent)" /> تم إنشاء الجدول بنجاح
         </h1>
@@ -237,7 +237,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
       </div>
 
       {/* ── Schedule calendar (P5-T2) ────────────────────────────── */}
-      <Section icon={<CalendarDays size={20} />} title="جدول الامتحانات يوماً بيوم" defaultOpen>
+      <Section icon={<CalendarDays size={20} />} title="جدول الامتحانات يوماً بيوم" defaultOpen className="no-print">
         <div className="schedule-grid" style={{ padding: 'var(--space-4)' }}>
           {filteredSchedule.length === 0 ? (
             <div className="no-results">لا توجد نتائج مطابقة للبحث أو الفلتر المختار.</div>
@@ -334,7 +334,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
 
 
       {/* ── Bottom action ────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 'var(--space-8)' }}>
+      <div className="no-print" style={{ display: 'flex', justifyContent: 'center', paddingBottom: 'var(--space-8)' }}>
         <button id="btn-new-schedule" className="btn btn-ghost" onClick={onRestart}>
           ↺ بدء جدولة جديدة
         </button>
