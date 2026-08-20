@@ -104,36 +104,37 @@ def _rule2_blank_course_id(df: pd.DataFrame) -> list[ValidationIssue]:
 
 def _rule3_same_course_same_dept_two_names(df: pd.DataFrame) -> list[ValidationIssue]:
     """
-    Rule 3 — Same course_id + same department → two different display names (Critical).
+    Rule 3 — Same course_id + same department + same academic_level → two different display names (Critical).
 
-    Groups by (course_id, department); flags groups with more than one distinct
+    Groups by (course_id, department, academic_level); flags groups with more than one distinct
     course_display_name.
     """
     issues: list[ValidationIssue] = []
     # Only consider rows with a non-blank course_id
     valid = df[df["course_id"] != ""]
-    grouped = valid.groupby(["course_id", "department"])["course_display_name"].agg(
+    grouped = valid.groupby(["course_id", "department", "academic_level"])["course_display_name"].agg(
         lambda x: x.unique().tolist()
     )
-    for (course_id, department), names in grouped.items():
+    for (course_id, department, academic_level), names in grouped.items():
         if len(names) > 1:
             # Find all row indices belonging to this group
-            mask = (valid["course_id"] == course_id) & (valid["department"] == department)
+            mask = (valid["course_id"] == course_id) & (valid["department"] == department) & (valid["academic_level"] == academic_level)
             rows = [int(r) for r in valid.index[mask]]
             issues.append(
                 ValidationIssue(
-                    severity="warning",
+                    severity="critical",
                     rule=3,
                     row=rows[0],          # first affected row
                     column="course_display_name",
                     message=(
-                        f"رمز المادة '{course_id}' في قسم '{department}' مرتبط "
-                        f"بأكثر من اسم عرض مختلف في نفس القسم. سيتم اختيار الاسم الأول."
+                        f"رمز المادة '{course_id}' في قسم '{department}' (مستوى {academic_level}) مرتبط "
+                        f"بأكثر من اسم عرض مختلف. سيتم اختيار الاسم الأول."
                     ),
                     offending_value=str(names),
                     extra={
                         "course_id": course_id,
                         "department": department,
+                        "academic_level": academic_level,
                         "conflicting_names": names,
                         "affected_rows": rows,
                     },
@@ -258,8 +259,8 @@ def validate(df: pd.DataFrame) -> dict:
         if not (i.column == "course_id" and i.row in r2_rows)
     ]
 
-    all_critical = r1_deduped + r2
-    all_warnings = r3 + r5 + r6
+    all_critical = r1_deduped + r2 + r3
+    all_warnings = r5 + r6
 
     def _serialise(issue: ValidationIssue) -> dict:
         return {

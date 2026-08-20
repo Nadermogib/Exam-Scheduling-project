@@ -57,3 +57,22 @@
   flex: 1;
   padding-bottom: var(--space-16);
 }
+
+/* ── Global Responsiveness (P11-T1) ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-header__inner {
+    padding: var(--space-2) var(--space-4);
+  }
+  
+  .app-logo__icon {
+    font-size: 1.4rem;
+  }
+  
+  .app-logo__name {
+    font-size: var(--font-size-sm);
+  }
+  
+  .app-logo__sub {
+    font-size: 0.65rem;
+  }
+}

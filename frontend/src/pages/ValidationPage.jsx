@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Pencil, CheckCircle, XCircle } from 'lucide-react';
 import { patchCell } from '../api/client';
 import './ValidationPage.css';
 
@@ -55,7 +56,7 @@ function EditableCell({ sessionId, row, field, value, severity, onPatched }) {
         className="edit-icon"
         onClick={() => { setDraft(value ?? ''); setEditing(true); }}
         aria-hidden="true"
-      >✏️</span>
+      ><Pencil size={14} /></span>
     </div>
   );
 }
@@ -88,8 +89,9 @@ function IssuesSection({ title, issues, sessionId, severity, onPatched }) {
       {open && (
         <div className="issues-table-wrap">
           {count === 0 ? (
-            <div className="issues-empty">
-              {severity === 'critical' ? '✅ لا توجد أخطاء حرجة' : '✅ لا توجد تحذيرات'}
+            <div className="issues-empty" style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}>
+              <CheckCircle size={16} color="var(--color-success)" />
+              {severity === 'critical' ? 'لا توجد أخطاء حرجة' : 'لا توجد تحذيرات'}
             </div>
           ) : (
             <table className="issues-table" aria-label={title}>
@@ -175,7 +177,7 @@ export default function ValidationPage({ uploadData, onValidated, onBack }) {
 
       {/* Summary banner */}
       <div className={`validation-summary validation-summary--${canProceed ? 'ok' : 'error'}`}>
-        <span>{canProceed ? '✅' : '🚫'}</span>
+        <span>{canProceed ? <CheckCircle size={24} /> : <XCircle size={24} />}</span>
         {canProceed
           ? `البيانات صحيحة — يمكنك المتابعة. (تحذيرات: ${report.warnings.length})`
           : `يوجد ${report.errors.length} خطأ حرج يجب تصحيحه قبل المتابعة.`
@@ -203,7 +205,7 @@ export default function ValidationPage({ uploadData, onValidated, onBack }) {
       {/* Gate + actions */}
       <div>
         <div className={`gate-banner gate-banner--${canProceed ? 'clear' : 'blocked'}`}>
-          <span>{canProceed ? '🟢' : '🔴'}</span>
+          <span>{canProceed ? <CheckCircle size={20} /> : <XCircle size={20} />}</span>
           {canProceed
             ? 'جميع الأخطاء الحرجة تم حلّها — المتابعة إلى إعدادات الفترة متاحة.'
             : `يجب تصحيح ${report.errors.length} خطأ حرج قبل المتابعة — انقر على أي قيمة في العمود الرابع لتعديلها.`

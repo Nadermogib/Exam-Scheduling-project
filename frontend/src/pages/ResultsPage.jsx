@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { CheckCircle2, Book, Calendar, BarChart, Zap, CalendarDays, FileDown, Download, Loader, Printer, ClipboardList, PartyPopper } from 'lucide-react';
 import api from '../api/client';
-import CourseReferenceTable from '../components/CourseReferenceTable';
+import PrintScheduleTable from '../components/PrintScheduleTable';
 import './ResultsPage.css';
 
 /* ── Summary card ──────────────────────────────────────────────────────────── */
@@ -57,20 +58,89 @@ async function doExport(url, filename, setLoading) {
 
 /* ── Main ResultsPage ──────────────────────────────────────────────────────── */
 export default function ResultsPage({ result, sessionId, onRestart }) {
-  const [search,       setSearch]       = useState('');
-  const [deptFilter,   setDeptFilter]   = useState('');
-  const [dlMaster,     setDlMaster]     = useState(false);
-  const [dlDept,       setDlDept]       = useState(false);
-  const [refOpen,      setRefOpen]      = useState(false);
+  const [search, setSearch] = useState('');
+  const [deptFilter, setDeptFilter] = useState('');
+  const [dlMaster, setDlMaster] = useState(false);
+  const [dlDept, setDlDept] = useState(false);
+
+  // Phase 8-C/D: print table state
+  const [headerText, setHeaderText] = useState(null);   // null = use dynamic default
+  const [universityText, setUniversityText] = useState(null); // null = use default
+  const [logoDataUrl, setLogoDataUrl] = useState(null);   // null = use default asset
+  const [savingHeader, setSavingHeader] = useState(false);
+  const printExportRef = useRef(null);
+  const headerSaveTimer = useRef(null);
+
+  // Load persisted print settings on mount
+  useEffect(() => {
+    api.get('/api/print-settings')
+      .then(res => {
+        if (res.data.header_text !== null) setHeaderText(res.data.header_text);
+        if (res.data.university_text !== null) setUniversityText(res.data.university_text);
+        if (res.data.logo_data_url !== null) setLogoDataUrl(res.data.logo_data_url);
+      })
+      .catch(() => {/* silently ignore — defaults will be used */ });
+  }, []);
+
+  // Debounced save of header text (800ms after last keystroke)
+  const handleHeaderChange = useCallback((newText) => {
+    setHeaderText(newText);
+    setSavingHeader(true);
+    clearTimeout(headerSaveTimer.current);
+    headerSaveTimer.current = setTimeout(async () => {
+      try {
+        await api.patch('/api/print-settings', { header_text: newText });
+      } catch {
+        // silently ignore
+      } finally {
+        setSavingHeader(false);
+      }
+    }, 800);
+  }, []);
+
+  const handleUniversityTextChange = useCallback((newText) => {
+    setUniversityText(newText);
+    setSavingHeader(true);
+    clearTimeout(headerSaveTimer.current);
+    headerSaveTimer.current = setTimeout(async () => {
+      try {
+        await api.patch('/api/print-settings', { university_text: newText });
+      } catch {
+        // silently ignore
+      } finally {
+        setSavingHeader(false);
+      }
+    }, 800);
+  }, []);
+
+  // Logo upload: save to backend immediately
+  const handleLogoUpload = useCallback(async (dataUrl) => {
+    setLogoDataUrl(dataUrl);
+    try {
+      await api.patch('/api/print-settings', { logo_data_url: dataUrl });
+    } catch { /* ignore */ }
+  }, []);
+
+  // Logo remove: delete from backend
+  const handleLogoRemove = useCallback(async () => {
+    setLogoDataUrl(null);
+    try {
+      await api.delete('/api/print-settings/logo');
+    } catch { /* ignore */ }
+  }, []);
 
   const { schedule, total_courses, days_used, max_load, wall_time_seconds,
-          avg_courses_per_day, status } = result;
+    avg_courses_per_day, status } = result;
 
   /* ── Derive departments list from schedule ─────────────────────── */
   const departments = useMemo(() => {
     const depts = new Set();
     Object.values(schedule).forEach((courses) =>
-      courses.forEach((c) => Object.keys(c.display_names).forEach((d) => depts.add(d)))
+      courses.forEach((c) => {
+        if (c.variants) {
+          Object.keys(c.variants).forEach((d) => depts.add(d));
+        }
+      })
     );
     return ['', ...Array.from(depts).sort()];
   }, [schedule]);
@@ -85,14 +155,19 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
 
         // Department filter
         if (deptFilter) {
-          filtered = filtered.filter((c) => deptFilter in c.display_names);
+          filtered = filtered.filter((c) => c.variants && deptFilter in c.variants);
         }
 
         // Text search: matches course_id or any display name
         if (q) {
           filtered = filtered.filter((c) => {
             if (c.course_id.toLowerCase().includes(q)) return true;
-            return Object.values(c.display_names).some((n) => n.toLowerCase().includes(q));
+            if (c.variants) {
+              return Object.values(c.variants).some((vs) =>
+                vs.some((v) => v.display_name.toLowerCase().includes(q))
+              );
+            }
+            return false;
           });
         }
 
@@ -108,7 +183,9 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
     <main className="results-page">
       {/* ── Header ───────────────────────────────────────────────── */}
       <div>
-        <h1 className="page-title">🎉 تم إنشاء الجدول بنجاح</h1>
+        <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <PartyPopper size={28} color="var(--color-accent)" /> تم إنشاء الجدول بنجاح
+        </h1>
         <p className="page-subtitle">
           الحالة: <strong style={{ color: 'var(--color-success)' }}>{status}</strong> —
           خالٍ تماماً من التعارضات (مضمون رياضياً).
@@ -118,11 +195,11 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
 
       {/* ── Summary cards (P5-T1) ────────────────────────────────── */}
       <div className="summary-cards">
-        <SummaryCard icon="✅" value="صفر" label="تعارضات" highlight />
-        <SummaryCard icon="📚" value={total_courses} label="مادة مجدولة" />
-        <SummaryCard icon="📅" value={days_used}     label="أيام امتحانات" />
-        <SummaryCard icon="📊" value={max_load}      label="أقصى مواد/يوم" />
-        <SummaryCard icon="⚡" value={avg_courses_per_day} label="متوسط مواد/يوم" />
+        <SummaryCard icon={<CheckCircle2 size={28} color="var(--color-success)" />} value="صفر" label="تعارضات" highlight />
+        <SummaryCard icon={<Book size={28} color="var(--color-accent)" />} value={total_courses} label="مادة مجدولة" />
+        <SummaryCard icon={<Calendar size={28} color="var(--color-accent)" />} value={days_used} label="أيام امتحانات" />
+        <SummaryCard icon={<BarChart size={28} color="var(--color-accent)" />} value={max_load} label="أقصى مواد/يوم" />
+        <SummaryCard icon={<Zap size={28} color="var(--color-accent)" />} value={avg_courses_per_day} label="متوسط مواد/يوم" />
       </div>
 
       {/* ── Controls bar (P5-T3, P5-T4) ─────────────────────────── */}
@@ -131,7 +208,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
           id="search-courses"
           className="controls-bar__search"
           type="text"
-          placeholder="🔍 ابحث برمز المادة أو اسمها…"
+          placeholder="ابحث برمز المادة أو اسمها…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="بحث في المواد"
@@ -160,7 +237,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
       </div>
 
       {/* ── Schedule calendar (P5-T2) ────────────────────────────── */}
-      <Section icon="🗓️" title="جدول الامتحانات يوماً بيوم" defaultOpen>
+      <Section icon={<CalendarDays size={20} />} title="جدول الامتحانات يوماً بيوم" defaultOpen>
         <div className="schedule-grid" style={{ padding: 'var(--space-4)' }}>
           {filteredSchedule.length === 0 ? (
             <div className="no-results">لا توجد نتائج مطابقة للبحث أو الفلتر المختار.</div>
@@ -176,18 +253,19 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
                 </div>
                 <div className="schedule-day__courses">
                   {courses.map((c) => {
-                    const displayName = deptFilter
-                      ? (c.display_names[deptFilter] || Object.values(c.display_names)[0])
-                      : Object.values(c.display_names)[0];
+                    // Flatten variants for display Name
+                    const vs = c.variants ? (c.variants[deptFilter] || Object.values(c.variants)[0] || []) : [];
+                    const displayName = vs.length > 0 ? vs[0].display_name : c.course_id;
                     const isMatch = search && (
                       c.course_id.toLowerCase().includes(search.toLowerCase()) ||
-                      Object.values(c.display_names).some((n) => n.toLowerCase().includes(search.toLowerCase()))
+                      (c.variants && Object.values(c.variants).some((deptVs) => deptVs.some((v) => v.display_name.toLowerCase().includes(search.toLowerCase()))))
                     );
+                    const tooltipText = c.variants ? Object.entries(c.variants).map(([d, deptVs]) => `${d}: ${deptVs.map(v => v.display_name).join('، ')}`).join('\n') : '';
                     return (
                       <div
                         key={c.course_id}
                         className={`course-chip${isMatch ? ' course-chip--highlighted' : ''}`}
-                        title={Object.entries(c.display_names).map(([d, n]) => `${d}: ${n}`).join('\n')}
+                        title={tooltipText}
                       >
                         <span className="course-chip__id">{c.course_id}</span>
                         {displayName && <span className="course-chip__name">{displayName}</span>}
@@ -204,7 +282,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
 
       {/* ── Export bar (P5-T7) ───────────────────────────────────── */}
       <div className="export-bar">
-        <span className="export-bar__title">📥 تصدير الجدول:</span>
+        <span className="export-bar__title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FileDown size={20} /> تصدير الجدول:</span>
         <button
           id="btn-export-master"
           className="btn btn-primary"
@@ -215,7 +293,7 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
             setDlMaster
           )}
         >
-          {dlMaster ? '⏳ جارٍ التصدير…' : '⬇ الجدول الكامل (Excel)'}
+          {dlMaster ? <><Loader size={16} /> جارٍ التصدير…</> : <><Download size={16} /> الجدول الكامل (Excel)</>}
         </button>
 
         {deptFilter && (
@@ -229,15 +307,31 @@ export default function ResultsPage({ result, sessionId, onRestart }) {
               setDlDept
             )}
           >
-            {dlDept ? '⏳ …' : `⬇ جدول قسم ${deptFilter}`}
+            {dlDept ? <><Loader size={16} /> …</> : <><Download size={16} /> جدول قسم {deptFilter}</>}
           </button>
         )}
       </div>
 
-      {/* ── Course reference table (P5-T8, P7-T3) ──────────────────────── */}
-      <Section icon="📋" title="جدول مرجعي: رموز المواد ومسمياتها" defaultOpen={false}>
-        <CourseReferenceTable />
+      {/* ── Print-ready table (Phase 8-C/D/E) ────────────────────────── */}
+      <Section icon={<Printer size={20} />} title="جدول الطباعة الرسمي" defaultOpen={false}>
+        <div style={{ padding: 'var(--space-2)' }}>
+          <PrintScheduleTable
+            schedule={schedule}
+            departments={departments.slice(1)}
+            deptFilter={deptFilter}
+            exportRef={printExportRef}
+            headerText={headerText}
+            onHeaderChange={handleHeaderChange}
+            universityText={universityText}
+            onUniversityTextChange={handleUniversityTextChange}
+            logoDataUrl={logoDataUrl}
+            onLogoUpload={handleLogoUpload}
+            onLogoRemove={handleLogoRemove}
+            saving={savingHeader}
+          />
+        </div>
       </Section>
+
 
       {/* ── Bottom action ────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 'var(--space-8)' }}>

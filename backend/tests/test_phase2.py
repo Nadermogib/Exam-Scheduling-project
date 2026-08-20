@@ -66,7 +66,7 @@ class TestCourseUnification:
         cm = course_unification(df)
         assert "C01" in cm
         assert "أحمد" in cm["C01"].students
-        assert cm["C01"].dept_names == {"قسم أ": "مادة أ"}
+        assert cm["C01"].variants == {"قسم أ": {("ث2", "مادة أ")}}
 
     def test_student_in_multiple_courses(self):
         """One student enrolled in 3 courses → all 3 course nodes exist."""
@@ -93,9 +93,9 @@ class TestCourseUnification:
         assert len(cm) == 1
         info = cm["C900"]
         assert info.students == {"أحمد", "سارة"}
-        assert info.dept_names == {
-            "قسم أ": "الرياضيات المتقطعة",
-            "قسم ب": "رياضيات الحوسبة",
+        assert info.variants == {
+            "قسم أ": {("ث2", "الرياضيات المتقطعة")},
+            "قسم ب": {("ث2", "رياضيات الحوسبة")},
         }
 
     def test_blank_course_id_skipped(self):

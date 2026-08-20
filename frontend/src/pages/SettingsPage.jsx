@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { CalendarRange, CalendarOff, CalendarDays, AlertTriangle } from 'lucide-react';
 import './SettingsPage.css';
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
@@ -176,7 +177,7 @@ export default function SettingsPage({ sessionId, onConfirm, onBack }) {
       {/* Date range */}
       <div className="settings-card">
         <div className="settings-card__header">
-          <span>📅</span> نطاق الفترة الزمنية
+          <CalendarRange size={20} /> نطاق الفترة الزمنية
         </div>
         <div className="settings-card__body">
           <div className="date-row">
@@ -201,14 +202,14 @@ export default function SettingsPage({ sessionId, onConfirm, onBack }) {
               />
             </div>
           </div>
-          {dateError && <p className="field-error">⚠️ {dateError}</p>}
+          {dateError && <p className="field-error"><AlertTriangle size={16} /> {dateError}</p>}
         </div>
       </div>
 
       {/* Weekday exclusions */}
       <div className="settings-card">
         <div className="settings-card__header">
-          <span>🚫</span> أيام العطلة الأسبوعية (انقر للتبديل)
+          <CalendarOff size={20} /> أيام العطلة الأسبوعية (انقر للتبديل)
         </div>
         <div className="settings-card__body">
           <div className="weekday-grid">
@@ -233,7 +234,7 @@ export default function SettingsPage({ sessionId, onConfirm, onBack }) {
       {/* Ad-hoc exclusions calendar */}
       <div className="settings-card">
         <div className="settings-card__header">
-          <span>🗓️</span> استثناء أيام إضافية (إجازات رسمية)
+          <CalendarDays size={20} /> استثناء أيام إضافية (إجازات رسمية)
           {excludedDates.length > 0 && (
             <span style={{ marginRight: 'auto', fontWeight: 400, fontSize: 'var(--font-size-xs)', color: 'var(--color-error)' }}>
               ({excludedDates.length} يوم مستثنى)
@@ -283,7 +284,7 @@ export default function SettingsPage({ sessionId, onConfirm, onBack }) {
 
       {availableDays.length > 0 && availableDays.length < 5 && (
         <div className="gate-banner gate-banner--blocked" style={{ marginTop: 'calc(var(--space-4) * -1)' }}>
-          <span>⚠️</span>
+          <AlertTriangle size={20} />
           عدد الأيام المتاحة ({availableDays.length}) قد لا يكفي لجدولة جميع الامتحانات — تحقق من إعدادات الفترة.
         </div>
       )}

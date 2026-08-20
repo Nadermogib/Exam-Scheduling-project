@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
+import { Folder, Network, Calculator, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
 import { runSchedule } from '../api/client';
 import './ProcessingPage.css';
 
 const STAGES = [
-  { id: 0, icon: '📂', label: 'قراءة البيانات من الجلسة' },
-  { id: 1, icon: '🕸️', label: 'بناء مصفوفة التعارض' },
-  { id: 2, icon: '🧮', label: 'تشغيل خوارزمية CP-SAT' },
-  { id: 3, icon: '✅', label: 'التحقق من صحة النتائج' },
+  { id: 0, icon: <Folder size={18} />, label: 'قراءة البيانات من الجلسة' },
+  { id: 1, icon: <Network size={18} />, label: 'بناء مصفوفة التعارض' },
+  { id: 2, icon: <Calculator size={18} />, label: 'تشغيل خوارزمية CP-SAT' },
+  { id: 3, icon: <CheckCircle size={18} />, label: 'التحقق من صحة النتائج' },
 ];
 
 export default function ProcessingPage({ config, onSuccess, onInfeasible, onBack }) {
@@ -57,7 +58,7 @@ export default function ProcessingPage({ config, onSuccess, onInfeasible, onBack
   return (
     <main className="processing-page">
       <div className="processing-orb">
-        {hasError ? '⚠️' : stage >= 3 ? '✅' : '⚙️'}
+        {hasError ? <AlertTriangle size={40} color="var(--color-danger)" /> : stage >= 3 ? <CheckCircle size={40} color="var(--color-success)" /> : <Settings size={40} color="var(--color-accent)" />}
       </div>
 
       <div style={{ textAlign: 'center' }}>
@@ -88,7 +89,7 @@ export default function ProcessingPage({ config, onSuccess, onInfeasible, onBack
             const cls    = `stage-item${active ? ' stage-item--active' : done ? ' stage-item--done' : ''}`;
             return (
               <div key={s.id} className={cls}>
-                <span className="stage-item__icon">{done ? '✅' : s.icon}</span>
+                <span className="stage-item__icon">{done ? <CheckCircle size={18} color="var(--color-success)" /> : s.icon}</span>
                 <span className="stage-item__label">{s.label}</span>
                 {active && <span className="stage-spinner" />}
                 <span className="stage-item__status">
@@ -104,7 +105,7 @@ export default function ProcessingPage({ config, onSuccess, onInfeasible, onBack
       {hasError && (
         <>
           <div className="processing-error" role="alert">
-            <span>⚠️</span>
+            <AlertTriangle size={20} />
             <span>{error}</span>
           </div>
           <div className="processing-actions">

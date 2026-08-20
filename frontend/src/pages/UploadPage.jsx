@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
+import { ClipboardList, LayoutGrid, Type, Ruler, Globe, CheckCircle, Folder, FileSpreadsheet, AlertTriangle, Download } from 'lucide-react';
 import { uploadFile, downloadTemplate } from '../api/client';
 import './UploadPage.css';
 
 const REQUIREMENTS = [
-  { icon: '📋', text: 'الصيغة: ملف Excel بامتداد .xlsx فقط' },
-  { icon: '🗂️', text: 'خمسة أعمدة إلزامية: اسم الطالب · القسم · رمز المادة · المقرر · الفصل' },
-  { icon: '🔤', text: 'رموز المواد (course_id) يجب أن تكون متسقة في جميع الصفوف' },
-  { icon: '📏', text: 'الحجم الأقصى للملف: 20 ميغابايت' },
-  { icon: '🌐', text: 'يدعم النص العربي والإنجليزي في خلايا البيانات' },
+  { icon: <ClipboardList size={18} />, text: 'الصيغة: ملف Excel بامتداد .xlsx فقط' },
+  { icon: <LayoutGrid size={18} />, text: 'خمسة أعمدة إلزامية: اسم الطالب · القسم · رمز المادة · المقرر · الفصل' },
+  { icon: <Type size={18} />, text: 'رموز المواد (course_id) يجب أن تكون متسقة في جميع الصفوف' },
+  { icon: <Ruler size={18} />, text: 'الحجم الأقصى للملف: 20 ميغابايت' },
+  { icon: <Globe size={18} />, text: 'يدعم النص العربي والإنجليزي في خلايا البيانات' },
 ];
 
 export default function UploadPage({ onUploadSuccess }) {
@@ -113,14 +114,14 @@ export default function UploadPage({ onUploadSuccess }) {
         />
 
         <span className="drop-zone__icon">
-          {file ? '✅' : '📂'}
+          {file ? <CheckCircle size={48} color="var(--color-success)" /> : <Folder size={48} color="var(--color-text-muted)" />}
         </span>
 
         {file ? (
           <>
             <p className="drop-zone__title">تم اختيار الملف</p>
             <div className="drop-zone__selected-name">
-              <span>📄</span>
+              <FileSpreadsheet size={16} />
               <span>{file.name}</span>
               <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>
                 ({(file.size / 1024).toFixed(0)} KB)
@@ -141,7 +142,7 @@ export default function UploadPage({ onUploadSuccess }) {
       {/* Error banner */}
       {error && (
         <div className="upload-error" role="alert">
-          <span>⚠️</span>
+          <AlertTriangle size={20} />
           <span>{error}</span>
         </div>
       )}
@@ -169,7 +170,7 @@ export default function UploadPage({ onUploadSuccess }) {
           onClick={handleTemplate}
           disabled={dlLoading}
         >
-          {dlLoading ? 'جارٍ التحميل...' : '⬇ تحميل قالب Excel'}
+          {dlLoading ? 'جارٍ التحميل...' : <><Download size={16} /> تحميل قالب Excel</>}
         </button>
       </div>
 

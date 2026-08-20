@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AlertTriangle, Calendar, Calculator, PlusCircle, Ruler, Lightbulb, RefreshCw, Search, Users, Network, FileDown, Download, Loader, RotateCcw } from 'lucide-react';
 import api from '../api/client';
 import './ResultsPage.css'; /* reuse shared styles */
 
@@ -55,8 +56,8 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
     <main className="results-page">
       {/* ── Header ───────────────────────────────────────────────── */}
       <div>
-        <h1 className="page-title" style={{ color: 'var(--color-error)' }}>
-          ⚠️ الجدولة غير ممكنة في الفترة المحددة
+        <h1 className="page-title" style={{ color: 'var(--color-error)', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+          <AlertTriangle size={28} /> الجدولة غير ممكنة في الفترة المحددة
         </h1>
         <p className="page-subtitle">
           أثبت محلل CP-SAT رياضياً أنه لا يوجد جدول خالٍ من التعارضات مع الأيام المتاحة الحالية.
@@ -67,16 +68,16 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
 
       {/* ── Metric cards (P6-T1) ─────────────────────────────────── */}
       <div className="summary-cards">
-        <MetricCard icon="📅" value={available_days}       label="أيام متاحة حالياً" />
-        <MetricCard icon="🧮" value={min_days_required}    label="الحد الأدنى المطلوب" danger />
-        <MetricCard icon="➕" value={additional_days_needed} label="أيام إضافية مطلوبة" danger />
+        <MetricCard icon={<Calendar size={24} color="var(--color-warning)" />} value={available_days}       label="أيام متاحة حالياً" />
+        <MetricCard icon={<Calculator size={24} color="var(--color-error)" />} value={min_days_required}    label="الحد الأدنى المطلوب" danger />
+        <MetricCard icon={<PlusCircle size={24} color="var(--color-error)" />} value={additional_days_needed} label="أيام إضافية مطلوبة" danger />
       </div>
 
       {/* ── Math explanation ─────────────────────────────────────── */}
       <div className="results-section">
         <div className="results-section__header" style={{ cursor: 'default' }}>
           <div className="results-section__title">
-            <span>📐</span>شرح القيد الرياضي
+            <Ruler size={20} /> شرح القيد الرياضي
           </div>
         </div>
         <div style={{ padding: 'var(--space-5) var(--space-6)', lineHeight: 1.8, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
@@ -98,7 +99,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
       {suggestions.length > 0 && (
         <div className="results-section">
           <div className="results-section__header" style={{ cursor: 'default' }}>
-            <div className="results-section__title"><span>💡</span>توصيات محددة</div>
+            <div className="results-section__title"><Lightbulb size={20} /> توصيات محددة</div>
           </div>
           <div style={{ padding: 'var(--space-5) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             {suggestions.map((s) => (
@@ -114,8 +115,8 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>{s.id}</span>
                 <div>
-                  <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontWeight: 600 }}>
-                    {s.action === 'extend_period' ? '⟳ تمديد فترة الامتحانات' : '🔍 مراجعة بيانات الطالب'}
+                  <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {s.action === 'extend_period' ? <><RefreshCw size={14} /> تمديد فترة الامتحانات</> : <><Search size={14} /> مراجعة بيانات الطالب</>}
                   </p>
                   <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginTop: 4 }}>
                     {s.message}
@@ -136,7 +137,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
           onKeyDown={(e) => e.key === 'Enter' && setStudentsOpen((o) => !o)}
         >
           <div className="results-section__title">
-            <span>👥</span>الطلاب الأكثر تأثيراً على التعقيد
+            <Users size={20} /> الطلاب الأكثر تأثيراً على التعقيد
           </div>
           <span className="section-chevron">{studentsOpen ? '▲' : '▼'}</span>
         </div>
@@ -182,7 +183,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
           onKeyDown={(e) => e.key === 'Enter' && setCoursesOpen((o) => !o)}
         >
           <div className="results-section__title">
-            <span>🕸️</span>المواد الأكثر تعارضاً (أعلى درجة في المصفوفة)
+            <Network size={20} /> المواد الأكثر تعارضاً (أعلى درجة في المصفوفة)
           </div>
           <span className="section-chevron">{coursesOpen ? '▲' : '▼'}</span>
         </div>
@@ -207,7 +208,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
                       }}>{c.degree}</span>
                     </td>
                     <td style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
-                      {Object.entries(c.display_names).map(([d, n]) => `${d}: ${n}`).join(' | ')}
+                      {c.variants ? Object.entries(c.variants).map(([d, deptVs]) => `${d}: ${deptVs.map(v => v.display_name).join('، ')}`).join(' | ') : ''}
                     </td>
                   </tr>
                 ))}
@@ -218,7 +219,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
       </div>
       {/* ── Export bar (P6-T6) ───────────────────────────────────── */}
       <div className="export-bar" style={{ justifyContent: 'center' }}>
-        <span className="export-bar__title">📥 تصدير التقرير:</span>
+        <span className="export-bar__title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><FileDown size={20} /> تصدير التقرير:</span>
         <button
           id="btn-export-infeasible"
           className="btn btn-primary"
@@ -229,7 +230,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
             setDlExport
           )}
         >
-          {dlExport ? '⏳ جارٍ التصدير…' : '⬇ تقرير عدم الإمكانية (Excel)'}
+          {dlExport ? <><Loader size={16} /> جارٍ التصدير…</> : <><Download size={16} /> تقرير عدم الإمكانية (Excel)</>}
         </button>
       </div>
 
@@ -239,7 +240,7 @@ export default function InfeasibilityPage({ result, sessionId, onBack, onRestart
           ← تعديل الإعدادات
         </button>
         <button id="btn-restart-infeasible" className="btn btn-ghost" onClick={onRestart}>
-          ↺ بدء جدولة جديدة
+          <RotateCcw size={16} /> بدء جدولة جديدة
         </button>
       </div>
     </main>
